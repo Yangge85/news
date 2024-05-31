@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>大象新闻</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+
+        }
+
+        body {
+            border-collapse: collapse;
+
+            background-color: #ffffff;
+            color: white;
+        }
+
+        h1 {
+            font-size: 50px;
+        }
+
+        header {
+            width: 380px;
+            text-align: center;
+        }
+
+        .container {
+            margin: 0 auto;
+            text-align: left;
+            width: 380px;
+            /* border: 0.5px solid #000; */
+
+        }
+
+        #copyButton {
+            border: 0.5px solid #000;
+            width: 380px;
+            font-size: 30px;
+            background-color: red;
+            color: white;
+            height: 80px;
+
+            cursor: pointer;
+        }
+
+        #output {
+            background-color: white;
+            color: black;
+            width: 100%;
+            /* margin: 0 auto; */
+        }
+
+        p {
+            border: 0.5px solid #000;
+            font-size: 25px;
+        }
+
+        #dateInfo {
+            /* margin: 0 auto; */
+            width: 380px;
+            text-align: center;
+            font-size: 25px;
+            background-color: white;
+            color: black;
+        }
+
+        /* 样式化浅黑色小窗口 */
+        #copySuccess {
+            position: fixed;
+            top: 200px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <!-- <h1>大象新闻</h1> -->
+
+    </header>
+
+    <div class="container">
+        <button id="copyButton">大象新闻一键复制</button>
+        <p id="dateInfo"></p>
+        <div id="output"></div>
+    </div>
+
+    <div id="copySuccess">新闻已复制到剪贴板</div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.8/clipboard.min.js"></script>
+
+    <script>
+        new ClipboardJS('#copyButton', {
+            text: function () {
+                return generateNewsText();
+            }
+        });
+
+        const dateInfo = document.getElementById("dateInfo");
+        const currentDate = new Date();
+        const options = {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            weekday: "long"
+        };
+        dateInfo.textContent = "今天是 " + currentDate.toLocaleDateString("zh-CN", options);
+
+        function generateNewsText() {
+            const newsData = document.querySelectorAll("#output p");
+            let newsText = `早安象友[太阳]\n今天是 ${currentDate.toLocaleDateString("zh-CN", options)}\n----------------------------------\n`;
+
+            newsData.forEach((item, index) => {
+                // Remove the sequence number for the copied text
+                const newsContent = item.textContent.replace(/^\d+、/, '');
+                newsText += `${index + 1}、${newsContent}\n`;
+            });
+
+            newsText += "----------------------------------\n[玫瑰]大象国际-帮您找到最适合的理财产品，竭诚为您服务！";
+            return newsText;
+        }
+
+        fetch('https://api.gumengya.com/Api/KuaiShouHot', {
+            mode: 'cors'
+        })
+            .then(response => response.json())
+            .then(data => {
+                // Correctly reference the titles from the fetched JSON data
+                const newsData = data.data.slice(0, 20);
+                let output = '';
+
+                newsData.forEach((item, index) => {
+                    // Add sequence numbers to each news item
+                    output += `<p>${index + 1}、${item.title}</p>`;
+                });
+
+                document.getElementById("output").innerHTML = output;
+            })
+            .catch(error => {
+                document.getElementById("output").textContent = "无法获取数据，请重试。";
+            });
+
+        const copySuccess = document.getElementById("copySuccess");
+
+        document.getElementById("copyButton").addEventListener("click", function () {
+            copySuccess.style.display = "block";
+            setTimeout(function () {
+                copySuccess.style.display = "none";
+            }, 2000);
+        });
+
+    </script>
+</body>
+
+</html>
